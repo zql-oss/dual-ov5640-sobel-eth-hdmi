@@ -1,0 +1,71 @@
+# CAMERA 1
+################ J3 ###########################
+set_property -dict {PACKAGE_PIN AA11 IOSTANDARD LVCMOS33} [get_ports cam_scl_1]
+set_property -dict {PACKAGE_PIN AB12 IOSTANDARD LVCMOS33} [get_ports cam_sda_1]
+set_property -dict {PACKAGE_PIN W12 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_1[0]}]
+set_property -dict {PACKAGE_PIN AB13 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_1[2]}]
+set_property -dict {PACKAGE_PIN AA14 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_1[4]}]
+set_property -dict {PACKAGE_PIN AB15 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_1[6]}]
+set_property -dict {PACKAGE_PIN AB17 IOSTANDARD LVCMOS33} [get_ports cam_pclk_1]
+create_clock -period 40.000 -name cmos_pclk_1 [get_ports cam_pclk_1]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets cam_pclk_1_IBUF]
+set_property -dict {PACKAGE_PIN AA10 IOSTANDARD LVCMOS33} [get_ports cam_vsync_1]
+set_property -dict {PACKAGE_PIN AB11 IOSTANDARD LVCMOS33} [get_ports cam_href_1]
+set_property -dict {PACKAGE_PIN W11 IOSTANDARD LVCMOS33} [get_ports cam_rst_n_1]
+set_property -dict {PACKAGE_PIN AA13 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_1[1]}]
+set_property -dict {PACKAGE_PIN Y13 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_1[3]}]
+set_property -dict {PACKAGE_PIN AA15 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_1[5]}]
+set_property -dict {PACKAGE_PIN AB16 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_1[7]}]
+set_property -dict {PACKAGE_PIN AA16 IOSTANDARD LVCMOS33} [get_ports cam_pwdn_1]
+
+# CAMERA 2
+################ J4 ###########################
+set_property -dict {PACKAGE_PIN AB10 IOSTANDARD LVCMOS33} [get_ports cam_scl_2]
+set_property -dict {PACKAGE_PIN T15 IOSTANDARD LVCMOS33} [get_ports cam_sda_2]
+set_property -dict {PACKAGE_PIN V14 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_2[0]}]
+set_property -dict {PACKAGE_PIN U16 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_2[2]}]
+set_property -dict {PACKAGE_PIN W14 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_2[4]}]
+set_property -dict {PACKAGE_PIN V15 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_2[6]}]
+set_property -dict {PACKAGE_PIN W15 IOSTANDARD LVCMOS33} [get_ports cam_pclk_2]
+create_clock -period 40.000 -name cmos_pclk_2 [get_ports cam_pclk_2]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets cam_pclk_2_IBUF]
+set_property -dict {PACKAGE_PIN AA9 IOSTANDARD LVCMOS33} [get_ports cam_vsync_2]
+set_property -dict {PACKAGE_PIN T14 IOSTANDARD LVCMOS33} [get_ports cam_href_2]
+set_property -dict {PACKAGE_PIN V13 IOSTANDARD LVCMOS33} [get_ports cam_rst_n_2]
+set_property -dict {PACKAGE_PIN T16 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_2[1]}]
+set_property -dict {PACKAGE_PIN Y14 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_2[3]}]
+set_property -dict {PACKAGE_PIN U15 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_2[5]}]
+set_property -dict {PACKAGE_PIN W16 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data_2[7]}]
+set_property -dict {PACKAGE_PIN Y12 IOSTANDARD LVCMOS33} [get_ports cam_pwdn_2]
+
+
+
+
+
+
+
+
+
+
+
+
+
+# CAMERA
+################ J3 ###########################
+set_property -dict {PACKAGE_PIN AA11 IOSTANDARD LVCMOS33} [get_ports cam_scl]
+set_property -dict {PACKAGE_PIN AB12 IOSTANDARD LVCMOS33} [get_ports cam_sda]
+set_property -dict {PACKAGE_PIN W12 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data[0]}]
+set_property -dict {PACKAGE_PIN AB13 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data[2]}]
+set_property -dict {PACKAGE_PIN AA14 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data[4]}]
+set_property -dict {PACKAGE_PIN AB15 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data[6]}]
+set_property -dict {PACKAGE_PIN AB17 IOSTANDARD LVCMOS33} [get_ports cam_pclk]
+create_clock -period 40.000 -name cmos_pclk [get_ports cam_pclk]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets cam_pclk_IBUF]
+set_property -dict {PACKAGE_PIN AA10 IOSTANDARD LVCMOS33} [get_ports cam_vsync]
+set_property -dict {PACKAGE_PIN AB11 IOSTANDARD LVCMOS33} [get_ports cam_href]
+set_property -dict {PACKAGE_PIN W11 IOSTANDARD LVCMOS33} [get_ports cam_rst_n]
+set_property -dict {PACKAGE_PIN AA13 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data[1]}]
+set_property -dict {PACKAGE_PIN Y13 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data[3]}]
+set_property -dict {PACKAGE_PIN AA15 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data[5]}]
+set_property -dict {PACKAGE_PIN AB16 IOSTANDARD LVCMOS33 IOB TRUE} [get_ports {cam_data[7]}]
+set_property -dict {PACKAGE_PIN AA16 IOSTANDARD LVCMOS33} [get_ports cam_pwdn]
