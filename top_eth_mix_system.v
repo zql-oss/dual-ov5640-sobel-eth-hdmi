@@ -322,17 +322,38 @@ hdmi_top u_hdmi_top(
     .h_disp               (h_disp),          //HDMI屏水平分辨率
     .v_disp               (v_disp),          //HDMI屏垂直分辨率   
     .pixel_xpos           (pixel_xpos_w),
-    .pixel_ypos           (pixel_ypos_w),      
+    .pixel_ypos           (pixel_ypos_w),   
     .data_in              (rd_data),         //数据输入 
     .data_req             (rdata_req)        //请求数据输入   
 );  
+wire video_hs;
+wire video_vs;
+wire video_de;
+wire video_hs;
+wire [15:0] video_rgb;
+video_driver video_driver_inst(
+    .pixel_clk   (pixel_clk),
+    .sys_rst_n   (sys_init_done & rst_n),
+    .video_hs    (video_hs ),
+    .video_vs    (video_vs ),
+    .video_de    (video_de ),
+    .video_rgb   (video_rgb),
+    
+    .pixel_data  (rd_data),
+    .pixel_xpos  (),
+    .pixel_ypos  (),
+    .h_disp      (h_disp   ),
+    .v_disp      (v_disp   ),
+    .data_req    (rdata_req)
+);
+
   eth_img_pkt eth0_img_pkt(    
     .rst_n              (sys_init_done & rst_n), //input                    
     ////图像相关信号              
     .cam_pclk           (pixel_clk       ), //input  图像时钟             
-    .img_vsync          (rd_vsync        ), //input  帧同步               
-    .img_data_en        (rdata_req       ), //input  de               
-    .img_data           ({rd_data[31 : 27],rd_data[21 : 16],rd_data[11 :  7]}), //input  [15:0]   //vesa_debug_data //eth0_img_data
+    .img_vsync          (video_vs        ), //input  帧同步               
+    .img_data_en        (video_de        ), //input  de               
+    .img_data           ({video_rgb[31 : 27],video_rgb[21 : 16],video_rgb[11 :  7]}), //input  [15:0]   //vesa_debug_data //eth0_img_data
     .transfer_flag      (1               ), //input                                        
     ////以太网相关信号
     .eth_tx_clk         (gmii_tx_clk     ), //input                          
