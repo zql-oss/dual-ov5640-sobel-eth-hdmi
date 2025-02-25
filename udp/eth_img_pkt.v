@@ -1,79 +1,80 @@
+//ä¸€æ¬¡ä¼ è¾“ä¸€è¡Œæ•°æ®1024*16bit
 module eth_img_pkt(
-    input                 rst_n          ,   //¸´Î»ĞÅºÅ£¬µÍµçÆ½ÓĞĞ§
-    //Í¼ÏñÏà¹ØĞÅºÅ
-    input                 cam_pclk       ,   //ÏñËØÊ±ÖÓ
-    input                 img_vsync      ,   //Ö¡Í¬²½ĞÅºÅ
-    input                 img_data_en    ,   //Êı¾İÓĞĞ§Ê¹ÄÜĞÅºÅ
-    input        [15:0]   img_data       ,   //ÓĞĞ§Êı¾İ 
+    input                 rst_n          ,   //å¤ä½ä¿¡å·ï¼Œä½ç”µå¹³æœ‰æ•ˆ
+    //å›¾åƒç›¸å…³ä¿¡å·
+    input                 cam_pclk       ,   //åƒç´ æ—¶é’Ÿ
+    input                 img_vsync      ,   //å¸§åŒæ­¥ä¿¡å·
+    input                 img_data_en    ,   //æ•°æ®æœ‰æ•ˆä½¿èƒ½ä¿¡å·
+    input        [15:0]   img_data       ,   //æœ‰æ•ˆæ•°æ® 
     
-    input                 transfer_flag  ,   //Í¼Ïñ¿ªÊ¼´«Êä±êÖ¾,1:¿ªÊ¼´«Êä 0:Í£Ö¹´«Êä
-    //ÒÔÌ«ÍøÏà¹ØĞÅºÅ 
-    input                 eth_tx_clk     ,   //ÒÔÌ«Íø·¢ËÍÊ±ÖÓ
-    input                 udp_tx_req     ,   //udp·¢ËÍÊı¾İÇëÇóĞÅºÅ
-    input                 udp_tx_done    /* synthesis PAP_MARK_DEBUG="1" */,   //udp·¢ËÍÊı¾İÍê³ÉĞÅºÅ                               
-    output  reg           udp_tx_start_en,   //udp¿ªÊ¼·¢ËÍĞÅºÅ
-    output       [31:0]   udp_tx_data       /* synthesis PAP_MARK_DEBUG="1" */,   //udp·¢ËÍµÄÊı¾İ
-    output  reg  [15:0]   udp_tx_byte_num    //udpµ¥°ü·¢ËÍµÄÓĞĞ§×Ö½ÚÊı
+    input                 transfer_flag  ,   //å›¾åƒå¼€å§‹ä¼ è¾“æ ‡å¿—,1:å¼€å§‹ä¼ è¾“ 0:åœæ­¢ä¼ è¾“
+    //ä»¥å¤ªç½‘ç›¸å…³ä¿¡å· 
+    input                 eth_tx_clk     ,   //ä»¥å¤ªç½‘å‘é€æ—¶é’Ÿ
+    input                 udp_tx_req     ,   //udpå‘é€æ•°æ®è¯·æ±‚ä¿¡å·
+    input                 udp_tx_done    /* synthesis PAP_MARK_DEBUG="1" */,   //udpå‘é€æ•°æ®å®Œæˆä¿¡å·                               
+    output  reg           udp_tx_start_en,   //udpå¼€å§‹å‘é€ä¿¡å·
+    output       [31:0]   udp_tx_data       /* synthesis PAP_MARK_DEBUG="1" */,   //udpå‘é€çš„æ•°æ®
+    output  reg  [15:0]   udp_tx_byte_num    //udpå•åŒ…å‘é€çš„æœ‰æ•ˆå­—èŠ‚æ•°
     );    
     
 //parameter define
-parameter  CMOS_H_PIXEL = 16'd960;  //Í¼ÏñË®Æ½·½Ïò·Ö±æÂÊ
-parameter  CMOS_V_PIXEL = 16'd540;  //Í¼Ïñ´¹Ö±·½Ïò·Ö±æÂÊ
-parameter  UDP_DATA_SIZE = 16'd960; //UDPÊı¾İ³¤¶È£¨²»°üº¬Ê×²¿£©
-parameter  ETH_TRAN_DELAY = 11'd800; //Ö¡¼ä¸ôÑÓ³Ù
-//Í¼ÏñÖ¡Í·,ÓÃÓÚ±êÖ¾Ò»Ö¡Êı¾İµÄ¿ªÊ¼
+parameter  CMOS_H_PIXEL = 16'd1024;  //å›¾åƒæ°´å¹³æ–¹å‘åˆ†è¾¨ç‡
+parameter  CMOS_V_PIXEL = 16'd768;  //å›¾åƒå‚ç›´æ–¹å‘åˆ†è¾¨ç‡
+parameter  UDP_DATA_SIZE = 16'd1024; //UDPæ•°æ®é•¿åº¦ï¼ˆä¸åŒ…å«é¦–éƒ¨ï¼‰
+parameter  ETH_TRAN_DELAY = 11'd800; //å¸§é—´éš”å»¶è¿Ÿ
+//å›¾åƒå¸§å¤´,ç”¨äºæ ‡å¿—ä¸€å¸§æ•°æ®çš„å¼€å§‹
 parameter  IMG_FRAME_HEAD = {32'hf0_5a_a5_0f};
 
-reg             img_vsync_d0    ;  //Ö¡ÓĞĞ§ĞÅºÅ´òÅÄ
-reg             img_vsync_d1    ;  //Ö¡ÓĞĞ§ĞÅºÅ´òÅÄ
-reg             neg_vsync_d0    ;  //Ö¡ÓĞĞ§ĞÅºÅÏÂ½µÑØ´òÅÄ
+reg             img_vsync_d0    ;  //å¸§æœ‰æ•ˆä¿¡å·æ‰“æ‹
+reg             img_vsync_d1    ;  //å¸§æœ‰æ•ˆä¿¡å·æ‰“æ‹
+reg             neg_vsync_d0    ;  //å¸§æœ‰æ•ˆä¿¡å·ä¸‹é™æ²¿æ‰“æ‹
 reg             neg_vsync_d1    ;
-reg             img_de_d0       ;  //DE±êÖ¾Î»´òÅÄ
-reg             img_de_d1       ;  //DE±êÖ¾Î» ´òÅÄ     
+reg             img_de_d0       ;  //DEæ ‡å¿—ä½æ‰“æ‹
+reg             img_de_d1       ;  //DEæ ‡å¿—ä½ æ‰“æ‹     
 reg             eth_delay_d0    ;
 reg             eth_delay_d1    ;                          
 
 
-reg             wr_sw           ;  //ÓÃÓÚÎ»Æ´½ÓµÄ±êÖ¾
-reg    [15:0]   img_data_d0     ;  //ÓĞĞ§Í¼ÏñÊı¾İ´òÅÄ
-reg             wr_fifo_en      /* synthesis PAP_MARK_DEBUG="1" */;  //Ğ´fifoÊ¹ÄÜ
-reg    [31:0]   wr_fifo_data    /* synthesis PAP_MARK_DEBUG="1" */;  //Ğ´fifoÊı¾İ
+reg             wr_sw           ;  //ç”¨äºä½æ‹¼æ¥çš„æ ‡å¿—
+reg    [15:0]   img_data_d0     ;  //æœ‰æ•ˆå›¾åƒæ•°æ®æ‰“æ‹
+reg             wr_fifo_en      /* synthesis PAP_MARK_DEBUG="1" */;  //å†™fifoä½¿èƒ½
+reg    [31:0]   wr_fifo_data    /* synthesis PAP_MARK_DEBUG="1" */;  //å†™fifoæ•°æ®
 
-reg             img_vsync_txc_d0;  //ÒÔÌ«Íø·¢ËÍÊ±ÖÓÓòÏÂ,Ö¡ÓĞĞ§ĞÅºÅ´òÅÄ
-reg             img_vsync_txc_d1;  //ÒÔÌ«Íø·¢ËÍÊ±ÖÓÓòÏÂ,Ö¡ÓĞĞ§ĞÅºÅ´òÅÄ
-reg             tx_busy_flag    ;  //·¢ËÍÃ¦ĞÅºÅ±êÖ¾
-reg    [15 : 0] img_de_cnt      /* synthesis PAP_MARK_DEBUG="1" */;//deÏÂ½µÑØ¼ÆÊı
+reg             img_vsync_txc_d0;  //ä»¥å¤ªç½‘å‘é€æ—¶é’ŸåŸŸä¸‹,å¸§æœ‰æ•ˆä¿¡å·æ‰“æ‹
+reg             img_vsync_txc_d1;  //ä»¥å¤ªç½‘å‘é€æ—¶é’ŸåŸŸä¸‹,å¸§æœ‰æ•ˆä¿¡å·æ‰“æ‹
+reg             tx_busy_flag    ;  //å‘é€å¿™ä¿¡å·æ ‡å¿—
+reg    [15 : 0] img_de_cnt      /* synthesis PAP_MARK_DEBUG="1" */;//deä¸‹é™æ²¿è®¡æ•°
 reg    [31 : 0] img_pkt_cnt    /* synthesis PAP_MARK_DEBUG="1" */;
-reg    [15 : 0]       eth_delay_cnt  /* synthesis PAP_MARK_DEBUG="1" */;    //delay¼ÆÊıÆ÷  
+reg    [15 : 0]       eth_delay_cnt  /* synthesis PAP_MARK_DEBUG="1" */;    //delayè®¡æ•°å™¨  
 reg                  eth_delay_start/* synthesis PAP_MARK_DEBUG="1" */;
 reg                  eth_delay_done /* synthesis PAP_MARK_DEBUG="1" */;                           
 //wire define                   
-wire            pos_vsync       ;  //Ö¡ÓĞĞ§ĞÅºÅÉÏÉıÑØ
-wire            neg_vsync       ;  //Ö¡ÓĞĞ§ĞÅºÅÏÂ½µÑØ
-wire            neg_vsynt_txc   ;  //ÒÔÌ«Íø·¢ËÍÊ±ÖÓÓòÏÂ,Ö¡ÓĞĞ§ĞÅºÅÏÂ½µÑØ
-wire            pos_de          ;  //Êı¾İÓĞĞ§ĞÅºÅÉÏÉıÑØ
+wire            pos_vsync       ;  //å¸§æœ‰æ•ˆä¿¡å·ä¸Šå‡æ²¿
+wire            neg_vsync       ;  //å¸§æœ‰æ•ˆä¿¡å·ä¸‹é™æ²¿
+wire            neg_vsynt_txc   ;  //ä»¥å¤ªç½‘å‘é€æ—¶é’ŸåŸŸä¸‹,å¸§æœ‰æ•ˆä¿¡å·ä¸‹é™æ²¿
+wire            pos_de          ;  //æ•°æ®æœ‰æ•ˆä¿¡å·ä¸Šå‡æ²¿
 wire            pos_eth_delay   ;  //udp
-wire   [10:0]    fifo_rdusedw    /* synthesis PAP_MARK_DEBUG="1" */;  //µ±Ç°FIFO»º´æµÄ¸öÊı
+wire   [10:0]    fifo_rdusedw    /* synthesis PAP_MARK_DEBUG="1" */;  //å½“å‰FIFOç¼“å­˜çš„ä¸ªæ•°
 
 
 //*****************************************************
 //**                    main code
 //*****************************************************
 
-//ĞÅºÅ²ÉÑØ
+//ä¿¡å·é‡‡æ²¿
 assign neg_vsync = img_vsync_d1 & (~img_vsync_d0);
 assign pos_vsync = ~img_vsync_d1 & img_vsync_d0;
 assign neg_vsynt_txc = ~img_vsync_txc_d1 & img_vsync_txc_d0;
 assign neg_de    = (~img_de_d0) & img_de_d1;
 assign pos_eth_delay = eth_delay_d0 & (~eth_delay_d1);
-//¶Ôimg_vsyncĞÅºÅÑÓÊ±Á½¸öÊ±ÖÓÖÜÆÚ,ÓÃÓÚ²ÉÑØ
+//å¯¹img_vsyncä¿¡å·å»¶æ—¶ä¸¤ä¸ªæ—¶é’Ÿå‘¨æœŸ,ç”¨äºé‡‡æ²¿
 always @(posedge cam_pclk or negedge rst_n) begin
     if(!rst_n) begin
         img_vsync_d0 <= 1'b0;
         img_vsync_d1 <= 1'b0;
         img_de_d0    <= 1'b0;
         img_de_d1    <= 1'b0;
-        eth_delay_d0 <=  'd0;//ÔÚÊäÈëÊ±ÖÓÓòÏÂ¶Ôudp·¢ËÍÍê³ÉĞÅºÅ²ÉÑù
+        eth_delay_d0 <=  'd0;//åœ¨è¾“å…¥æ—¶é’ŸåŸŸä¸‹å¯¹udpå‘é€å®Œæˆä¿¡å·é‡‡æ ·
         eth_delay_d1 <=  'd0;
     end
     else begin
@@ -81,12 +82,12 @@ always @(posedge cam_pclk or negedge rst_n) begin
         img_vsync_d1 <= img_vsync_d0;
         img_de_d0 <= img_data_en;
         img_de_d1 <= img_de_d0;
-        eth_delay_d0 <= eth_delay_start;//ÔÚÊäÈëÊ±ÖÓÓòÏÂ¶Ôudp·¢ËÍÍê³ÉĞÅºÅ²ÉÑù
+        eth_delay_d0 <= eth_delay_start;//åœ¨è¾“å…¥æ—¶é’ŸåŸŸä¸‹å¯¹udpå‘é€å®Œæˆä¿¡å·é‡‡æ ·
         eth_delay_d1 <= eth_delay_d0;
     end
 end
 
-//¼Ä´æneg_vsyncĞÅºÅ
+//å¯„å­˜neg_vsyncä¿¡å·
 always @(posedge cam_pclk or negedge rst_n) begin
     if(!rst_n) begin
         neg_vsync_d0 <= 1'b0;
@@ -98,7 +99,7 @@ always @(posedge cam_pclk or negedge rst_n) begin
     end
 end    
 
-//¶Ôwr_swºÍimg_data_d0ĞÅºÅ¸³Öµ,ÓÃÓÚÎ»Æ´½Ó
+//å¯¹wr_swå’Œimg_data_d0ä¿¡å·èµ‹å€¼,ç”¨äºä½æ‹¼æ¥
 always @(posedge cam_pclk or negedge rst_n) begin
     if(!rst_n) begin
         wr_sw <= 1'b0;
@@ -112,7 +113,7 @@ always @(posedge cam_pclk or negedge rst_n) begin
     end    
 end 
 
-//½«Ö¡Í·ºÍÍ¼ÏñÊı¾İĞ´ÈëFIFO
+//å°†å¸§å¤´å’Œå›¾åƒæ•°æ®å†™å…¥FIFO
 always @(posedge cam_pclk or negedge rst_n) begin
     if(!rst_n || pos_vsync) begin
         wr_fifo_en <= 1'b0;
@@ -123,23 +124,23 @@ always @(posedge cam_pclk or negedge rst_n) begin
     else begin
         if(neg_vsync) begin
             wr_fifo_en <= 1'b1;
-            wr_fifo_data <= img_pkt_cnt;                  //UDP°ü±êÖ¾Î»
+            wr_fifo_data <= img_pkt_cnt;                  //UDPåŒ…æ ‡å¿—ä½
             img_pkt_cnt <= img_pkt_cnt + 'd1;
         end
         else if(neg_vsync_d0) begin
             wr_fifo_en <= 1'b1;
-            wr_fifo_data <= IMG_FRAME_HEAD;               //Ö¡Í·
+            wr_fifo_data <= IMG_FRAME_HEAD;               //å¸§å¤´
         end
         else if(neg_vsync_d1) begin
             wr_fifo_en <= 1'b1;
-            wr_fifo_data <= {CMOS_H_PIXEL,CMOS_V_PIXEL};  //Ë®Æ½ºÍ´¹Ö±·½Ïò·Ö±æÂÊ
+            wr_fifo_data <= {CMOS_H_PIXEL,CMOS_V_PIXEL};  //æ°´å¹³å’Œå‚ç›´æ–¹å‘åˆ†è¾¨ç‡
         end
         else if(img_data_en && wr_sw) begin
             wr_fifo_en <= 1'b1;
             img_de_cnt <= img_de_cnt + 'd1;
-            wr_fifo_data <= {img_data_d0,img_data};       //Í¼ÏñÊı¾İÎ»Æ´½Ó,16Î»×ª32Î»
+            wr_fifo_data <= {img_data_d0,img_data};       //å›¾åƒæ•°æ®ä½æ‹¼æ¥,16ä½è½¬32ä½
         end
-        else if(img_de_cnt == 240) begin //Ò»ĞĞ960 ¶ÔÓ¦µÄÊı¾İ¼ÆÊı
+        else if(img_de_cnt == 256) begin //ä¸€è¡Œ1024 å¯¹åº”çš„æ•°æ®è®¡æ•°
             wr_fifo_en <= 1'b1;
             wr_fifo_data <= img_pkt_cnt;
             img_pkt_cnt <= img_pkt_cnt + 'd1;
@@ -147,7 +148,7 @@ always @(posedge cam_pclk or negedge rst_n) begin
         end
         else if(neg_de) begin  
             wr_fifo_en <= 1'b1;
-            wr_fifo_data <= img_pkt_cnt;           //de½áÊøºóĞ´Èë¼ÆÊı
+            wr_fifo_data <= img_pkt_cnt;           //deç»“æŸåå†™å…¥è®¡æ•°
             img_pkt_cnt <= img_pkt_cnt + 'd1;
             img_de_cnt <= 'd0;
         end
@@ -158,7 +159,7 @@ always @(posedge cam_pclk or negedge rst_n) begin
     end
 end
 
-//ÒÔÌ«Íø·¢ËÍÊ±ÖÓÓòÏÂ,¶Ôimg_vsyncĞÅºÅÑÓÊ±Á½¸öÊ±ÖÓÖÜÆÚ,ÓÃÓÚ²ÉÑØ
+//ä»¥å¤ªç½‘å‘é€æ—¶é’ŸåŸŸä¸‹,å¯¹img_vsyncä¿¡å·å»¶æ—¶ä¸¤ä¸ªæ—¶é’Ÿå‘¨æœŸ,ç”¨äºé‡‡æ²¿
 always @(posedge eth_tx_clk or negedge rst_n) begin
     if(!rst_n) begin
         img_vsync_txc_d0 <= 1'b0;
@@ -170,41 +171,41 @@ always @(posedge eth_tx_clk or negedge rst_n) begin
     end
 end
 
-//¿ØÖÆÒÔÌ«Íø·¢ËÍµÄ×Ö½ÚÊı
+//æ§åˆ¶ä»¥å¤ªç½‘å‘é€çš„å­—èŠ‚æ•°
 always @(posedge eth_tx_clk or negedge rst_n) begin
     if(!rst_n)
         udp_tx_byte_num <= 1'b0;
-    else if(neg_vsynt_txc)//vsºóµÚÒ»¸öÊı¾İ°ü·¢ËÍÍ¼ÏñÊı¾İ³¤¶È+ÆğÊ¼±êÖ¾Î»³¤¶È8Byte
+    else if(neg_vsynt_txc)//vsåç¬¬ä¸€ä¸ªæ•°æ®åŒ…å‘é€å›¾åƒæ•°æ®é•¿åº¦+èµ·å§‹æ ‡å¿—ä½é•¿åº¦8Byte
         //udp_tx_byte_num <= {CMOS_H_PIXEL,1'b0} + 16'd8;
         udp_tx_byte_num <= UDP_DATA_SIZE + 16'd12;//16'd960 + 16'd8;
-    else if(udp_tx_done)//ºóĞøÕı³£°ü³¤    
+    else if(udp_tx_done)//åç»­æ­£å¸¸åŒ…é•¿    
         //udp_tx_byte_num <= {CMOS_H_PIXEL,1'b0};
         udp_tx_byte_num <= UDP_DATA_SIZE + 16'd4;//16'd960;
 end
 
-//¿ØÖÆÒÔÌ«Íø·¢ËÍ¿ªÊ¼ĞÅºÅ
+//æ§åˆ¶ä»¥å¤ªç½‘å‘é€å¼€å§‹ä¿¡å·
 always @(posedge eth_tx_clk or negedge rst_n) begin
     if(!rst_n) begin
         udp_tx_start_en <= 1'b0;
         tx_busy_flag <= 1'b0;
     end
-    //ÉÏÎ»»úÎ´·¢ËÍ"¿ªÊ¼"ÃüÁîÊ±,ÒÔÌ«Íø²»·¢ËÍÍ¼ÏñÊı¾İ
+    //ä¸Šä½æœºæœªå‘é€"å¼€å§‹"å‘½ä»¤æ—¶,ä»¥å¤ªç½‘ä¸å‘é€å›¾åƒæ•°æ®
     else if(transfer_flag == 1'b0) begin
         udp_tx_start_en <= 1'b0;
         tx_busy_flag <= 1'b0;        
     end
     else begin
         udp_tx_start_en <= 1'b0;
-        //µ±FIFOÖĞµÄ¸öÊıÂú×ãĞèÒª·¢ËÍµÄ×Ö½ÚÊıÊ± Ë®Î»/4(32bit->8bit)  ¶ø fifo_rdusedw Í¨³£±íÊ¾FIFOÖĞÒÑ´æ´¢µÄ32Î»×Ö£¨word£©µÄÊıÁ¿¡£ÓÉÓÚ1¸ö32Î»×ÖµÈÓÚ4×Ö½Ú£¬ËùÒÔÒª½«×Ö½ÚÊı×ª»»Îª32Î»×ÖµÄÊıÁ¿£¬¾ÍĞèÒª³ıÒÔ4¡£
+        //å½“FIFOä¸­çš„ä¸ªæ•°æ»¡è¶³éœ€è¦å‘é€çš„å­—èŠ‚æ•°æ—¶ æ°´ä½/4(32bit->8bit)  è€Œ fifo_rdusedw é€šå¸¸è¡¨ç¤ºFIFOä¸­å·²å­˜å‚¨çš„32ä½å­—ï¼ˆwordï¼‰çš„æ•°é‡ã€‚ç”±äº1ä¸ª32ä½å­—ç­‰äº4å­—èŠ‚ï¼Œæ‰€ä»¥è¦å°†å­—èŠ‚æ•°è½¬æ¢ä¸º32ä½å­—çš„æ•°é‡ï¼Œå°±éœ€è¦é™¤ä»¥4ã€‚
         if(tx_busy_flag == 1'b0 && fifo_rdusedw >= udp_tx_byte_num[15:2]) begin
-            udp_tx_start_en <= 1'b1;                     //¿ªÊ¼¿ØÖÆ·¢ËÍÒ»°üÊı¾İ
+            udp_tx_start_en <= 1'b1;                     //å¼€å§‹æ§åˆ¶å‘é€ä¸€åŒ…æ•°æ®
             tx_busy_flag <= 1'b1;
         end
         else if(eth_delay_done|| neg_vsynt_txc) 
             tx_busy_flag <= 1'b0;
     end
 end
-//×îĞ¡Ö¡¼ä¸ô£¬ÖÁÉÙÓĞ96bitsµÄ¼ä¸ô,Ç§Õ×ÒÔÌ«ÍøÒªÇó96ns£¬125Mhz->8ns£¬¼´12¸öÊ±ÖÓÖÜÆÚ£¬ÕâÀï¸ø500+°É
+//æœ€å°å¸§é—´éš”ï¼Œè‡³å°‘æœ‰96bitsçš„é—´éš”,åƒå…†ä»¥å¤ªç½‘è¦æ±‚96nsï¼Œ125Mhz->8nsï¼Œå³12ä¸ªæ—¶é’Ÿå‘¨æœŸï¼Œè¿™é‡Œç»™500+å§
 always @(posedge eth_tx_clk or negedge rst_n) begin
     if(!rst_n) begin
         eth_delay_cnt <= 'd0;
@@ -213,7 +214,7 @@ always @(posedge eth_tx_clk or negedge rst_n) begin
     end
     else begin
         eth_delay_done <= 'd0;
-        if(udp_tx_done) begin //Ò»ĞĞ´«ÊäÍê³É¾Í½øĞĞµÈ´ı
+        if(udp_tx_done) begin //ä¸€è¡Œä¼ è¾“å®Œæˆå°±è¿›è¡Œç­‰å¾…
             eth_delay_start <= 'd1;
         end 
         if(eth_delay_start) begin
@@ -226,7 +227,7 @@ always @(posedge eth_tx_clk or negedge rst_n) begin
         end
     end
 end
-reg    [10:0]   udp_pkt_cnt     /* synthesis PAP_MARK_DEBUG="1" */;  //udp°ü¼ÆÊı
+reg    [10:0]   udp_pkt_cnt     /* synthesis PAP_MARK_DEBUG="1" */;  //udpåŒ…è®¡æ•°
 always @(posedge eth_tx_clk or negedge rst_n) begin
     if(!rst_n || neg_vsynt_txc) begin
         udp_pkt_cnt <= 'd0;
@@ -238,23 +239,26 @@ always @(posedge eth_tx_clk or negedge rst_n) begin
         udp_pkt_cnt <= udp_pkt_cnt;
     end
 end
-//Òì²½FIFO
+//å¼‚æ­¥FIFO
   
+//å¼‚æ­¥FIFO
 eth_pkt_fifo u_eth_pkt_fifo (
-  .wr_clk           (cam_pclk                    ) ,    // input
-  .wr_rst           (pos_vsync | (~transfer_flag)) ,    // input
-  .wr_en            (wr_fifo_en                  ) ,    // input
-  .wr_data          (wr_fifo_data                ) ,    // input [31:0]
-  .wr_full          (                            ) ,    // output
-  .wr_water_level   (                            ) ,    // output [10:0]
-  .almost_full      (                            ) ,    // output
-  .rd_clk           (eth_tx_clk                  ) ,    // input
-  .rd_rst           (pos_vsync | (~transfer_flag)) ,    // input
-  .rd_en            (udp_tx_req                  ) ,    // input
-  .rd_data          (udp_tx_data                 ) ,    // output [31:0]
-  .rd_empty         (                            ) ,    // output
-  .rd_water_level   (fifo_rdusedw                ) ,    // output [10:0]
-  .almost_empty     (                            )      // output
+    .rst                (pos_vsync | (~transfer_flag)),  //è¯»å¤ä½æ—¶éœ¿è¦å¤ä½è¯»FIFO
+    //.rst                (~rst_n                     ),
+    .wr_clk             (cam_pclk                   ),  //å†™ç«¯å£æ—¶é’Ÿæ˜¯AXIä¸»æœºæ—¶é’Ÿ, ä»axi_master_rdæ¨¡å—å†™å…¥æ•°æ®
+    .rd_clk             (eth_tx_clk                 ),  //è¯»ç«¯å£æ—¶é’¿
+    .din                (wr_fifo_data               ),  //ä»axi_master_rdæ¨¡å—å†™å…¥æ•°æ®
+    .wr_en              (wr_fifo_en                 ),  //axi_master_rdæ­£åœ¨è¯»æ—¶,FIFOä¹Ÿåœ¨å†™å…¥
+    .rd_en              (udp_tx_req                 ),  //è¯»FIFOè¯»ä½¿èƒ¿    //-----------------è¯»ä¸ç”¨æ”¹------------------
+    .dout               (udp_tx_data                ),  //è¯»FIFOè¯»å–çš„æ•°æ¿
+    .full               (                           ),  
+    .almost_full        (                           ),  
+    .empty              (                           ),  
+    .almost_empty       (                           ),  
+    .rd_data_count      (fifo_rdusedw               ),  
+    .wr_data_count      (                           ),  //è¯»FIFOå†™ç«¯å¿(å¯¹æ¥AXIè¯»ä¸»æœ¿)æ•°æ®æ•°é‡
+    .wr_rst_busy        (                           ),     
+    .rd_rst_busy        (                           )      
 );
 //eth_pkt_fifo u_eth_pkt_fifo (
 //  .wr_clk(wr_clk),                    // input
