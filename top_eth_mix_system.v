@@ -202,7 +202,7 @@ vip u_vip1(
     .ypos             (pixel_ypos_w   ),
     //图像处理后的数据接口
     .post_frame_vsync (post_frame_vsync_1 ),  // 场同步信叿
-    .post_frame_href ( ),                  // 行同步信叿
+    .post_frame_href  ( ),                  // 行同步信叿
     .post_frame_de    (post_frame_de_1 ),     // 数据输入使能
     .post_rgb         (post_rgb_1)            // RGB565颜色数据
 
@@ -221,7 +221,7 @@ vip u_vip2(
     .ypos             (pixel_ypos_w   ),
     //图像处理后的数据接口
     .post_frame_vsync (post_frame_vsync_2 ),  // 场同步信叿
-    .post_frame_href ( ),                  // 行同步信叿
+    .post_frame_href  ( ),                  // 行同步信叿
     .post_frame_de    (post_frame_de_2 ),     // 数据输入使能
     .post_rgb         (post_rgb_2)            // RGB565颜色数据
 
@@ -306,7 +306,7 @@ ddr_interface #(
    // Clock in ports
     .clk_in1               (sys_clk)
     );     
- 
+ /*
 //HDMI驱动显示模块    
 hdmi_top u_hdmi_top(
     .pixel_clk            (pixel_clk),
@@ -325,11 +325,32 @@ hdmi_top u_hdmi_top(
     .pixel_ypos           (pixel_ypos_w),   
     .data_in              (rd_data),         //数据输入 
     .data_req             (rdata_req)        //请求数据输入   
-);  
+);  */
+//将摄像头16bit数据转换为24bit的hdmi数据
+assign video_rgb_565 = {video_rgb[15:11],3'b000,video_rgb[10:5],2'b00,
+                        video_rgb[4:0],3'b000}; 
+dvi_transmitter_top dvi_transmitter_top_inst(
+    .pclk          (pixel_clk   ),
+    .pclk_x5       (pixel_clk_5x),
+    .reset_n       (sys_init_done & rst_n),
+                    
+    .video_din     (video_rgb_565 ),
+    .video_hsync   (video_hs   ),
+    .video_vsync   (video_vs   ),
+    .video_de      (video_de   ),
+                    
+    .tmds_clk_p    (tmds_clk_p ),
+    .tmds_clk_n    (tmds_clk_n ),
+    .tmds_data_p   (tmds_data_p),
+    .tmds_data_n   (tmds_data_n),
+    .tmds_oen      ()
+);
 wire video_hs;
 wire video_vs;
 wire video_de;
 wire video_hs;
+
+wire [23:0] video_rgb_565;
 wire [15:0] video_rgb;
 video_driver video_driver_inst(
     .pixel_clk   (pixel_clk),
